@@ -8,7 +8,7 @@ User = get_user_model()
 
 
 def generate_transaction_id():
-    return "".join(random.choices(string.digits, k=8))
+    return "".join(random.choices(string.digits, k=16))
 
 
 class HighLoadTransactionTest(TestCase):

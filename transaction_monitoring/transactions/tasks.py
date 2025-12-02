@@ -8,7 +8,7 @@ from asgiref.sync import async_to_sync
 
 from .models import Transaction
 
-BATCH_SIZE = 100
+BATCH_SIZE = 1000
 REDIS_TRANSACTIONS_KEY = settings.REDIS_TRANSACTIONS_KEY
 
 
@@ -18,6 +18,7 @@ class TransactionManager:
             Transaction.objects.bulk_create(objects, ignore_conflicts=True)
             print(f"ADDED TRANSACTIONS AS BULK, AMOUNT: {len(objects)}")
         except IntegrityError as e:
+            
             print(f"Integrity error while saving transactions: {e}")
         except DatabaseError as e:
             print(f"Database error while saving transactions: {e}")
@@ -39,7 +40,7 @@ def flush_transactions():
             break
 
         transactions_data = [json.loads(item) for item in items]
-
+        print(transactions_data[0])
         objects = [
             Transaction(
                 transaction_id=data["transaction_id"],
@@ -65,7 +66,7 @@ def process_transaction(self, transaction_data):
             "status": transaction_data.get("status", "PENDING"),
         }
 
-        redis.rpush(REDIS_TRANSACTIONS_KEY, json.dumps(validated_data))
+        # redis.rpush(REDIS_TRANSACTIONS_KEY, json.dumps(validated_data))
 
         send_to_consumer(validated_data)
 

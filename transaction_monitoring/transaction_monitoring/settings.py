@@ -1,4 +1,5 @@
 # run daphne server with this command: daphne -p 8000 transaction_monitoring.asgi:application
+# run celery beat: celery -A transaction_monitoring beat  . and . celery -A transaction_monitoring worker -l info
 """
 Django settings for transaction_monitoring project.
 
@@ -145,8 +146,6 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
-
-
 CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
 CELERY_ACCEPT_CONTENT = ["application/json"]
 CELERY_TASK_SERIALIZER = "json"
@@ -155,8 +154,8 @@ CELERY_TIMEZONE = "Asia/Tehran"
 
 CELERY_BEAT_SCHEDULE = {
     "flush_transactions": {
-        "task": "tasks.flush_transactions",
-        "schedule": 1.0, 
+        "task": "transactions.tasks.flush_transactions",
+        "schedule": 5.0,
     },
 }
 

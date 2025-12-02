@@ -6,6 +6,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "transaction_monitoring.settings
 app = Celery("transaction_monitoring")
 app.config_from_object("django.conf:settings", namespace="CELERY")
 app.autodiscover_tasks()
+__all__ = ("flush_transactions",)
 
 
 @app.task(bind=True)
