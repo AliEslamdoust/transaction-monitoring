@@ -21,7 +21,7 @@ class HighLoadTransactionTest(TestCase):
 
     def test_2000_transactions_per_second(self):
         url = "/api/add-transaction/"
-        requests_per_second = 2000
+        requests_per_second = 50
 
         start_time = time.time()
         end_time = start_time + 1

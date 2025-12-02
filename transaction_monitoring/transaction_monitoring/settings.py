@@ -1,5 +1,6 @@
 # run daphne server with this command: daphne -p 8000 transaction_monitoring.asgi:application
 # run celery beat: celery -A transaction_monitoring beat  . and . celery -A transaction_monitoring worker -l info
+# celery info: celery -A transaction_monitoring inspect registered
 """
 Django settings for transaction_monitoring project.
 

@@ -5,6 +5,7 @@ from django.db import IntegrityError, DatabaseError
 from django.conf import settings
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+import time
 
 from .models import Transaction
 
@@ -25,30 +26,29 @@ class TransactionManager:
         except Exception as e:
             print(f"Unexpected error while bulk saving: {e}")
 
-
 @shared_task
-def flush_transactions():
+def transaction_worker():
     redis = get_redis_connection("default")
 
     while True:
-        pipe = redis.pipeline()
-        pipe.lrange(REDIS_TRANSACTIONS_KEY, 0, BATCH_SIZE - 1)
-        pipe.ltrim(REDIS_TRANSACTIONS_KEY, BATCH_SIZE, -1)
-        items, _ = pipe.execute()
-
+        items = redis.lrange(REDIS_TRANSACTIONS_KEY, 0, BATCH_SIZE - 1)
         if not items:
-            break
+            time.sleep(0.001)
+            continue
 
-        transactions_data = [json.loads(item) for item in items]
-        print(transactions_data[0])
+        redis.ltrim(REDIS_TRANSACTIONS_KEY, BATCH_SIZE, -1)
+
+        transactions = [json.loads(item) for item in items]
+
         objects = [
             Transaction(
                 transaction_id=data["transaction_id"],
                 user_id=data["user"],
                 status=data.get("status", "PENDING"),
             )
-            for data in transactions_data
+            for data in transactions
         ]
+        print(objects)
 
         TransactionManager().save_data(objects)
 
@@ -66,9 +66,11 @@ def process_transaction(self, transaction_data):
             "status": transaction_data.get("status", "PENDING"),
         }
 
-        # redis.rpush(REDIS_TRANSACTIONS_KEY, json.dumps(validated_data))
+        redis.rpush(REDIS_TRANSACTIONS_KEY, json.dumps(validated_data))
 
         send_to_consumer(validated_data)
+        
+        transaction_worker.delay()  
 
     except Exception as err:
         print(f"Error in process_transaction: {err}")
