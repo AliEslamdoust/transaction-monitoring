@@ -1,4 +1,4 @@
-# run daphne server with this command: daphne -p 8001 transaction_monitoring.asgi:application
+# run daphne server with this command: daphne -p 8000 transaction_monitoring.asgi:application
 """
 Django settings for transaction_monitoring project.
 
@@ -127,6 +127,10 @@ USE_I18N = True
 
 USE_TZ = True
 
+# Source - https://stackoverflow.com/q
+# Posted by maheshg, modified by community. See post 'Timeline' for change history
+# Retrieved 2025-12-02, License - CC BY-SA 3.0
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
@@ -141,8 +145,29 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
+
+
 CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
 CELERY_ACCEPT_CONTENT = ["application/json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "Asia/Tehran"
+
+CELERY_BEAT_SCHEDULE = {
+    "flush_transactions": {
+        "task": "tasks.flush_transactions",
+        "schedule": 1.0, 
+    },
+}
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        },
+    }
+}
+
+REDIS_TRANSACTIONS_KEY = "transactions_list"
