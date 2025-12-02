@@ -1,4 +1,4 @@
-# run daphne server with this command: daphne -b 0.0.0.0 -p 8001 transaction_monitoring.asgi:application
+# run daphne server with this command: daphne -p 8001 transaction_monitoring.asgi:application
 """
 Django settings for transaction_monitoring project.
 
@@ -70,8 +70,17 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "transaction_monitoring.wsgi.application"
+ASGI_APPLICATION = "transaction_monitoring.asgi.application"
 
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
@@ -131,8 +140,8 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-CELERY_BROKER_URL = "amqp://guest:guest@localhost:5672//"
-CELERY_RESULT_BACKEND = "rpc://"
+
+CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
 CELERY_ACCEPT_CONTENT = ["application/json"]
 CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
