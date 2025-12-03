@@ -1,11 +1,10 @@
 import json
 from celery import shared_task
 from django_redis import get_redis_connection
-from django.db import IntegrityError, DatabaseError
+from django.db import IntegrityError, DatabaseError, connection
 from django.conf import settings
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
-import time
 
 from .models import Transaction
 
@@ -17,63 +16,48 @@ class TransactionManager:
     def save_data(self, objects):
         try:
             Transaction.objects.bulk_create(objects, ignore_conflicts=True)
-            print(f"ADDED TRANSACTIONS AS BULK, AMOUNT: {len(objects)}")
+            return {"success": True}
         except IntegrityError as e:
-            
+
             print(f"Integrity error while saving transactions: {e}")
         except DatabaseError as e:
             print(f"Database error while saving transactions: {e}")
         except Exception as e:
             print(f"Unexpected error while bulk saving: {e}")
+        return {"success": False}
+
 
 @shared_task
-def transaction_worker():
+def flush_transactions():
+
+    # Delete all rows from database
+    # with connection.cursor() as cursor:
+    #     cursor.execute("DELETE FROM transactions_transaction;")
+    #     cursor.execute("TRUNCATE TABLE transactions_transaction RESTART IDENTITY CASCADE;")
+
     redis = get_redis_connection("default")
+    manager = TransactionManager()
 
-    while True:
-        items = redis.lrange(REDIS_TRANSACTIONS_KEY, 0, BATCH_SIZE - 1)
-        if not items:
-            time.sleep(0.001)
-            continue
+    items = redis.lrange(REDIS_TRANSACTIONS_KEY, 0, BATCH_SIZE - 1)
 
-        redis.ltrim(REDIS_TRANSACTIONS_KEY, BATCH_SIZE, -1)
+    if not items:
+        return
 
-        transactions = [json.loads(item) for item in items]
+    transactions = [json.loads(item) for item in items]
 
-        objects = [
-            Transaction(
-                transaction_id=data["transaction_id"],
-                user_id=data["user"],
-                status=data.get("status", "PENDING"),
-            )
-            for data in transactions
-        ]
-        print(objects)
+    objects = [
+        Transaction(
+            transaction_id=data["transaction_id"],
+            user_id=data["user"],
+            status=data.get("status", "PENDING"),
+            amount=data["amount"],
+        )
+        for data in transactions
+    ]
 
-        TransactionManager().save_data(objects)
-
-    return "Flushed successfully"
-
-
-@shared_task(bind=True, max_retries=3)
-def process_transaction(self, transaction_data):
-    try:
-        redis = get_redis_connection("default")
-
-        validated_data = {
-            "transaction_id": transaction_data["transaction_id"],
-            "user": transaction_data["user"].id,
-            "status": transaction_data.get("status", "PENDING"),
-        }
-
-        redis.rpush(REDIS_TRANSACTIONS_KEY, json.dumps(validated_data))
-
-        send_to_consumer(validated_data)
-        
-        transaction_worker.delay()  
-
-    except Exception as err:
-        print(f"Error in process_transaction: {err}")
+    save_data = manager.save_data(objects)
+    if save_data["success"]:
+        redis.ltrim(REDIS_TRANSACTIONS_KEY, len(objects), -1)
 
 
 def send_to_consumer(data):

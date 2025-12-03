@@ -3,8 +3,9 @@ from rest_framework import generics, status
 from .models import Transaction
 from .serializers import TransactionSerializer
 from rest_framework.response import Response
-from .tasks import process_transaction
+from .tasks import send_to_consumer
 from django.conf import settings
+from django_redis import get_redis_connection
 
 REDIS_TRANSACTIONS_KEY = settings.REDIS_TRANSACTIONS_KEY
 
@@ -20,7 +21,9 @@ class ObtainTransactionDetailsView(generics.CreateAPIView):
         data = serializer.validated_data
         data["user"] = data["user"].id
 
-        process_transaction.delay(transaction_data=data)
+        redis = get_redis_connection("default")
+        redis.rpush(REDIS_TRANSACTIONS_KEY, json.dumps(data))
+        send_to_consumer(data=data)
 
         return Response(
             {"message": "Transaction detail was obtained successfully."},
