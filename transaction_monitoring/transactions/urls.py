@@ -1,6 +1,12 @@
 from django.urls import path
-from .views import ObtainTransactionDetailsView
+from . import views
 
 urlpatterns = [
-    path("add-transaction/",ObtainTransactionDetailsView.as_view())
+    path("add-transaction/", views.ObtainTransactionDetailsView.as_view()),
+    path(
+        "delete-transactions/",
+        views.DeleteTransactionsView.as_view(),
+    ),
+    path("get-transactions", views.GetTransactionsAverageView.as_view()),
+    path("get-transaction/<int:pk>", views.gettransaction.as_view()),
 ]

@@ -8,7 +8,6 @@ from asgiref.sync import async_to_sync
 
 from .models import Transaction
 
-BATCH_SIZE = 1000
 REDIS_TRANSACTIONS_KEY = settings.REDIS_TRANSACTIONS_KEY
 
 
@@ -29,16 +28,10 @@ class TransactionManager:
 
 @shared_task
 def flush_transactions():
-
-    # Delete all rows from database
-    # with connection.cursor() as cursor:
-    #     cursor.execute("DELETE FROM transactions_transaction;")
-    #     cursor.execute("TRUNCATE TABLE transactions_transaction RESTART IDENTITY CASCADE;")
-
     redis = get_redis_connection("default")
     manager = TransactionManager()
 
-    items = redis.lrange(REDIS_TRANSACTIONS_KEY, 0, BATCH_SIZE - 1)
+    items = redis.lrange(REDIS_TRANSACTIONS_KEY, 0, - 1)
 
     if not items:
         return
@@ -73,3 +66,12 @@ def send_to_consumer(data):
             "details": details,
         },
     )
+
+
+def delete_transactions_for_test():
+    # Delete all rows from database
+    with connection.cursor() as cursor:
+        cursor.execute("DELETE FROM transactions_transaction;")
+        cursor.execute(
+            "TRUNCATE TABLE transactions_transaction RESTART IDENTITY CASCADE;"
+        )
