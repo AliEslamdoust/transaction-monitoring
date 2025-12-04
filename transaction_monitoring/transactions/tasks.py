@@ -74,4 +74,4 @@ def delete_transactions_for_test():
         cursor.execute("DELETE FROM transactions_transaction;")
         cursor.execute(
             "TRUNCATE TABLE transactions_transaction RESTART IDENTITY CASCADE;"
-        )
+        )   
