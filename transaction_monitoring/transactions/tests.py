@@ -18,7 +18,6 @@ def generate_transaction_amount():
 class HighLoadTransactionTest(TestCase):
     @classmethod
     def setUpTestData(cls):
-        # Create 50 users
         cls.users = []
         for i in range(50):
             user = User.objects.create(username=f"test_user_{i}")
@@ -45,7 +44,6 @@ class HighLoadTransactionTest(TestCase):
         requests_per_user = 50
         threads = []
 
-        # Create threads for each user sending 50 requests
         for user in self.users:
             for request_num in range(requests_per_user):
                 thread = threading.Thread(
@@ -53,11 +51,9 @@ class HighLoadTransactionTest(TestCase):
                 )
                 threads.append(thread)
 
-        # Start all threads simultaneously
         for thread in threads:
             thread.start()
 
-        # Wait for all threads to complete
         for thread in threads:
             thread.join()
 
