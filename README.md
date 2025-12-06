@@ -59,10 +59,32 @@ Before running this application, ensure you have the following installed:
    - Host: `localhost`
    - Port: Default (5432)
 
+   Connect to PostgreSQL as the superuser:
+   ```bash
+   psql -U postgres # On Windows
+   # sudo -u postgres psql # On Linux/Mac
+   ```
+
+   Create a new database and user:
    ```sql
    CREATE DATABASE transactions_database;
    CREATE USER admin WITH PASSWORD '12345678';
    GRANT ALL PRIVILEGES ON DATABASE transactions_database TO admin;
+   ```
+
+   Switch the database context using the \c meta-command:
+   ```sql
+   \c transactions_database
+   ```
+
+   Grant CREATE permission to user:
+   ```sql
+   GRANT CREATE ON SCHEMA public TO admin;
+   ```
+
+   EXit the terminal:
+   ```sql
+   \q
    ```
 
 5. **Start Redis Server**
