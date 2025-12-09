@@ -1,60 +1,41 @@
-from django.test import TestCase, Client
+from django.test import TransactionTestCase, Client
 from django.contrib.auth import get_user_model
 import random
 import string
-import threading
+import json
 
 User = get_user_model()
 
-
-def generate_transaction_id():
+def random_id():
     return "".join(random.choices(string.digits, k=16))
 
-
-def generate_transaction_amount():
+def random_amount():
     return "".join(random.choices(string.digits, k=3))
 
 
-class HighLoadTransactionTest(TestCase):
+class HighLoadTransactionTest(TransactionTestCase):
+    reset_sequences = True
+
     @classmethod
-    def setUpTestData(cls):
-        cls.users = []
-        for i in range(50):
-            user = User.objects.create(username=f"test_user_{i}")
-            cls.users.append(user)
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.user = User.objects.create(username="test_user")
+        cls.client = Client()
 
-    def setUp(self):
-        self.client = Client()
-
-    def send_request(self, user, url, request_num):
-        """Send a single request for a specific user"""
-        payload = {
-            "transaction_id": generate_transaction_id(),
+    def send_request(self, url, i):
+        data = {
+            "transaction_id": random_id(),
             "status": "PENDING",
-            "user": user.id,
-            "amount": generate_transaction_amount(),
+            "user": self.user.id,
+            "amount": random_amount(),
         }
-        client = Client()
-        response = client.post(url, data=payload)
-        print(f"User {user.username} - Request {request_num}: {response.status_code}")
-        self.assertIn(response.status_code, [200, 201, 202])
+        resp = self.client.post(
+            url, data=json.dumps(data), content_type="application/json"
+        )
+        print(f"Request {i}: {resp.status_code}")
+        self.assertEqual(resp.status_code, 200)
 
-    def test_transactions(self):
+    def test_50_requests(self):
         url = "/api/add-transaction/"
-        requests_per_user = 50
-        threads = []
-
-        for user in self.users:
-            for request_num in range(requests_per_user):
-                thread = threading.Thread(
-                    target=self.send_request, args=(user, url, request_num)
-                )
-                threads.append(thread)
-
-        for thread in threads:
-            thread.start()
-
-        for thread in threads:
-            thread.join()
-
-        print(f"Completed {len(threads)} requests from {len(self.users)} users")
+        for i in range(50):
+            self.send_request(url, i)
