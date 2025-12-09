@@ -12,4 +12,4 @@ class TransactionSerializer(serializers.ModelSerializer):
 
         def create(self, validated_data):
             validated_data["created_at"] = datetime.now()
-            return super().crrate(validated_data)
+            return super().create(validated_data)
