@@ -7,9 +7,10 @@ from .tasks import send_to_consumer, delete_transactions_for_test
 from django.conf import settings
 from django_redis import get_redis_connection
 from rest_framework.views import APIView
-from django.db.models import Min, Max, Avg
-from django.db.models.functions import TruncDate
-from datetime import datetime, timedelta
+from django.db.models import Min, Max
+from datetime import datetime
+from django.utils.dateparse import parse_datetime
+from dateutil.relativedelta import relativedelta
 
 REDIS_TRANSACTIONS_CHANNELS_KEY = settings.REDIS_TRANSACTIONS_CHANNELS_KEY
 REDIS_TRANSACTIONS_DATABASE_KEY = settings.REDIS_TRANSACTIONS_DATABASE_KEY
@@ -47,58 +48,85 @@ class DeleteTransactionsView(APIView):
 
 class GetTransactionsAverageView(APIView):
     def get(self, request):
-        from_date_str = validate_date(request.GET.get("from"))
-        to_date_str = validate_date(request.GET.get("to"))
+        from_date_str = request.GET.get("from")
+        to_date_str = request.GET.get("to")
 
-        earliest_date, latest_date = get_date()
-
-        earliest_date = datetime.fromisoformat(
-            str(earliest_date).replace("Z", "+00:00")
-        )
-        latest_date = datetime.fromisoformat(str(latest_date).replace("Z", "+00:00"))
-
-        if not from_date_str or from_date_str < earliest_date:
-            from_date_str = earliest_date
+        if not from_date_str:
+            from_datetime = datetime.min
         else:
-            from_date_str = from_date_str.split("T") + "T00:00:00.000000+00:00"
+            from_datetime = parse_datetime(from_date_str)
 
-        if not to_date_str or to_date_str > latest_date:
-            to_date_str = latest_date
+        if not to_date_str:
+            to_datetime = datetime.max
         else:
-            to_date_str = to_date_str.split("T") + "T23:59:59.999999+00:00"
+            to_datetime = parse_datetime(to_date_str)
 
-        diff = (to_date_str - from_date_str).days
+        if to_datetime < from_datetime:
+            to_datetime, from_datetime = from_datetime, to_datetime
 
-        qs = (
-            Transaction.objects.filter(
-                created_at__date__gte=from_date_str, created_at__date__lte=to_date_str
-            )
-            .annotate(day=TruncDate("created_at"))
-            .values("day")
-            .annotate(avg_amount=Avg("amount"))
-            .order_by("day")
+        transactions = Transaction.objects.filter(
+            created_at__date__gte=from_datetime, created_at__date__lte=to_datetime
         )
 
-        # data_by_day = {f"{item["day"]}": item["avg_amount"] for item in qs}
+        transactions_list = list(transactions.values("created_at", "amount"))
+
+        amounts = [i["amount"] for i in transactions_list]
+
+        sales = sum(amounts)
+        number_of_sales = len(amounts)
+
+        if amounts:
+            avg = sales / number_of_sales
+        else:
+            avg = 0
+
+        time_frame = get_time_frame(to_datetime, from_datetime)
+
         return Response(
             {
                 "data": {
-                    "e": earliest_date,
-                    "l": latest_date,
-                    "f": from_date_str,
-                    "t": to_date_str,
-                    "data": qs,
+                    "avgerage_of_transactions": avg,
+                    "whole_profit": sales,
+                    "numer_of_sales": number_of_sales,
+                    "selected_time_frame": time_frame,
                 }
             },
             status=status.HTTP_200_OK,
         )
 
 
+def get_time_frame(to_datetime, from_datetime):
+    earliest, latest = get_date()
+    
+    if from_datetime < earliest:
+        from_datetime = earliest
+    if to_datetime > latest:
+        to_datetime = latest
+
+    diff = relativedelta(to_datetime, from_datetime)
+
+    parts = []
+
+    if diff.years:
+        parts.append(f"{diff.years} years")
+    if diff.months:
+        parts.append(f"{diff.months} months")
+    if diff.days:
+        parts.append(f"{diff.days} days")
+    if diff.hours:
+        parts.append(f"{diff.hours} hours")
+    if diff.minutes:
+        parts.append(f"{diff.minutes} minutes")
+    if diff.seconds:
+        parts.append(f"{diff.seconds} seconds")
+
+    return ", ".join(parts) if parts else "0 seconds"
+
+
 def get_date():
     dates = Transaction.objects.aggregate(
         earliest=Min("created_at"), latest=Max("created_at")
     )
-    # print(dates["earliest"])
 
     return dates["earliest"], dates["latest"]
 
