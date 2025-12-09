@@ -27,7 +27,7 @@ class HighLoadTransactionTest(TransactionTestCase):
             "transaction_id": random_id(),
             "status": "PENDING",
             "user": self.user.id,
-            "amount": random_amount(),
+            "amount": random_amount()
         }
         resp = self.client.post(
             url, data=json.dumps(data), content_type="application/json"

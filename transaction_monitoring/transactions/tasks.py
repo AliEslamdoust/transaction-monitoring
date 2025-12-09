@@ -45,6 +45,7 @@ def flush_transactions():
             user_id=data["user"],
             status=data.get("status", "PENDING"),
             amount=data["amount"],
+            created_at=data["created_at"]
         )
         for data in transactions
     ]

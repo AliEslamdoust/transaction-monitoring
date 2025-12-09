@@ -11,7 +11,7 @@ class Transaction(models.Model):
         ["FAILED", "Failed"],
     ]
     status = models.CharField(max_length=20, choices=PAYMENT_STATUS, default="PENDING")
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField()
     amount = models.IntegerField(validators=[validators.MinValueValidator(0)], default=0)
 
     def __str__(self):
