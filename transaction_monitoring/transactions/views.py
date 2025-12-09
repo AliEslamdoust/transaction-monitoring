@@ -11,7 +11,8 @@ from django.db.models import Min, Max, Avg
 from django.db.models.functions import TruncDate
 from datetime import datetime, timedelta
 
-REDIS_TRANSACTIONS_KEY = settings.REDIS_TRANSACTIONS_KEY
+REDIS_TRANSACTIONS_CHANNELS_KEY = settings.REDIS_TRANSACTIONS_CHANNELS_KEY
+REDIS_TRANSACTIONS_DATABASE_KEY = settings.REDIS_TRANSACTIONS_DATABASE_KEY
 
 
 class ObtainTransactionDetailsView(generics.CreateAPIView):
@@ -26,8 +27,8 @@ class ObtainTransactionDetailsView(generics.CreateAPIView):
         data["user"] = data["user"].id
 
         redis = get_redis_connection("default")
-        redis.rpush(REDIS_TRANSACTIONS_KEY, json.dumps(data))
-        send_to_consumer(data=data)
+        redis.lpush(REDIS_TRANSACTIONS_CHANNELS_KEY, json.dumps(data))
+        redis.lpush(REDIS_TRANSACTIONS_DATABASE_KEY, json.dumps(data))
 
         return Response(
             {"message": "Transaction detail was obtained successfully."},

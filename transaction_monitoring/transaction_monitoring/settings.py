@@ -153,11 +153,19 @@ CELERY_TASK_SERIALIZER = "json"
 CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = "Asia/Tehran"
 
+CELERY_TASK_TIME_LIMIT = None
+CELERY_TASK_SOFT_TIME_LIMIT = None
+CELERY_TASK_ALWAYS_EAGER = True
+
 CELERY_BEAT_SCHEDULE = {
     "flush_transactions": {
         "task": "transactions.tasks.flush_transactions",
-        "schedule": 5.0,
+        "schedule": 60.0,
     },
+}
+
+CELERY_TASK_ROUTES = {
+    "transactions.tasks.send_to_consumer": {"queue": "send_to_consumer"},
 }
 
 CACHES = {
@@ -170,4 +178,5 @@ CACHES = {
     }
 }
 
-REDIS_TRANSACTIONS_KEY = "transactions_list"
+REDIS_TRANSACTIONS_CHANNELS_KEY = "transactions_list_ch"
+REDIS_TRANSACTIONS_DATABASE_KEY = "transactions_list_db"
