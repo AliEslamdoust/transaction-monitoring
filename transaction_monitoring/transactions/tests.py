@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 import random
 import string
 import json
+from django.utils import timezone
 
 User = get_user_model()
 
@@ -23,11 +24,13 @@ class HighLoadTransactionTest(TransactionTestCase):
         cls.client = Client()
 
     def send_request(self, url, i):
+        current_time = timezone.now()
         data = {
             "transaction_id": random_id(),
             "status": "PENDING",
             "user": self.user.id,
-            "amount": random_amount()
+            "amount": random_amount(),
+            "created_at": str(current_time)
         }
         resp = self.client.post(
             url, data=json.dumps(data), content_type="application/json"

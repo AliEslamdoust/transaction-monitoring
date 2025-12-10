@@ -10,6 +10,7 @@ from rest_framework.views import APIView
 from django.db.models import Min, Max
 from datetime import datetime
 from django.utils.dateparse import parse_datetime
+from django.utils import timezone
 from dateutil.relativedelta import relativedelta
 
 REDIS_TRANSACTIONS_CHANNELS_KEY = settings.REDIS_TRANSACTIONS_CHANNELS_KEY
@@ -26,7 +27,7 @@ class ObtainTransactionDetailsView(generics.CreateAPIView):
 
         data = serializer.validated_data
         data["user"] = data["user"].id
-
+        data["created_at"] = str(data["created_at"])
         redis = get_redis_connection("default")
         redis.lpush(REDIS_TRANSACTIONS_CHANNELS_KEY, json.dumps(data))
         redis.lpush(REDIS_TRANSACTIONS_DATABASE_KEY, json.dumps(data))
@@ -52,12 +53,12 @@ class GetTransactionsAverageView(APIView):
         to_date_str = request.GET.get("to")
 
         if not from_date_str:
-            from_datetime = datetime.min
+            from_datetime = timezone.make_aware(datetime.min)
         else:
             from_datetime = parse_datetime(from_date_str)
 
         if not to_date_str:
-            to_datetime = datetime.max
+            to_datetime = timezone.make_aware(datetime.max)
         else:
             to_datetime = parse_datetime(to_date_str)
 
@@ -65,7 +66,7 @@ class GetTransactionsAverageView(APIView):
             to_datetime, from_datetime = from_datetime, to_datetime
 
         transactions = Transaction.objects.filter(
-            created_at__date__gte=from_datetime, created_at__date__lte=to_datetime
+            created_at__gte=from_datetime, created_at__lte=to_datetime
         )
 
         transactions_list = list(transactions.values("created_at", "amount"))
@@ -129,13 +130,6 @@ def get_date():
     )
 
     return dates["earliest"], dates["latest"]
-
-
-def validate_date(date_str):
-    try:
-        return datetime.strptime(date_str, "%Y-%m-%d")
-    except (TypeError, ValueError):
-        return None
 
 
 class gettransaction(generics.RetrieveAPIView):
