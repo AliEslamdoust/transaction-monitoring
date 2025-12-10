@@ -58,16 +58,17 @@ def flush_transactions():
 
 @shared_task(bind=True, time_limit=None, soft_time_limit=None)
 def send_to_consumer(self):
-    print("send_to_consumer started ...")
     r = get_redis_connection("default")
     channel_layer = get_channel_layer()
 
     while True:
         try:
-            data = r.rpop(REDIS_TRANSACTIONS_CHANNELS_KEY)
-            print(data)
+            res = r.brpop(REDIS_TRANSACTIONS_CHANNELS_KEY, timeout=5)
 
-            if data:
+            if res:
+                _, raw_data = res
+
+                json_data = raw_data.decode("utf-8")
                 receivers = ["admin_global"]
 
                 for receiver in receivers:
@@ -75,14 +76,14 @@ def send_to_consumer(self):
                         receiver,
                         {
                             "type": "send_transaction_update",
-                            "details": data,
+                            "details": json_data,
                         },
                     )
             else:
-                time.sleep(1)
+                pass
 
             r = get_redis_connection("default")
-            
+
         except Exception as e:
             print(f"Unexpected error: {e}")
             time.sleep(1)
