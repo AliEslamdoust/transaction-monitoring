@@ -28,6 +28,7 @@ class ObtainTransactionDetailsView(generics.CreateAPIView):
         data = serializer.validated_data
         data["user"] = data["user"].id
         data["created_at"] = str(data["created_at"])
+
         redis = get_redis_connection("default")
         redis.lpush(REDIS_TRANSACTIONS_CHANNELS_KEY, json.dumps(data))
         redis.lpush(REDIS_TRANSACTIONS_DATABASE_KEY, json.dumps(data))
@@ -52,18 +53,7 @@ class GetTransactionsAverageView(APIView):
         from_date_str = request.GET.get("from")
         to_date_str = request.GET.get("to")
 
-        if not from_date_str:
-            from_datetime = timezone.make_aware(datetime.min)
-        else:
-            from_datetime = parse_datetime(from_date_str)
-
-        if not to_date_str:
-            to_datetime = timezone.make_aware(datetime.max)
-        else:
-            to_datetime = parse_datetime(to_date_str)
-
-        if to_datetime < from_datetime:
-            to_datetime, from_datetime = from_datetime, to_datetime
+        from_datetime, to_datetime = validate_datetime(from_date_str, to_date_str)
 
         transactions = Transaction.objects.filter(
             created_at__gte=from_datetime, created_at__lte=to_datetime
@@ -96,9 +86,31 @@ class GetTransactionsAverageView(APIView):
         )
 
 
+def validate_datetime(from_date_str, to_date_str):
+    from_datetime = parse_datetime(from_date_str)
+    to_datetime = parse_datetime(to_date_str)
+
+    if not to_datetime:
+        to_datetime = timezone.make_aware(datetime.max)
+
+    if not from_datetime:
+        from_datetime = timezone.make_aware(datetime.min)
+
+    if timezone.is_naive(to_datetime):
+        timezone.make_aware(to_datetime)
+
+    if timezone.is_naive(from_datetime):
+        timezone.make_aware(from_datetime)
+
+    if to_datetime < from_datetime:
+        to_datetime, from_datetime = from_datetime, to_datetime
+
+    return from_datetime, to_datetime
+
+
 def get_time_frame(to_datetime, from_datetime):
     earliest, latest = get_date()
-    
+
     if from_datetime < earliest:
         from_datetime = earliest
     if to_datetime > latest:
