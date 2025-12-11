@@ -13,4 +13,5 @@ class AdminTransactionConsumer(AsyncWebsocketConsumer):
         await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
     async def send_transaction_update(self, event):
-        await self.send(text_data=json.dumps(event["details"]))
+        data = event["details"]
+        await self.send(text_data=json.dumps(data))

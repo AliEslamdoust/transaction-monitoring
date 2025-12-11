@@ -6,6 +6,7 @@ from django.db import IntegrityError, DatabaseError, connection
 from django.conf import settings
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+from django.core.cache import cache
 
 from .models import Transaction
 
@@ -18,8 +19,8 @@ class TransactionManager:
         try:
             Transaction.objects.bulk_create(objects, ignore_conflicts=True)
             return {"success": True}
+        
         except IntegrityError as e:
-
             print(f"Integrity error while saving transactions: {e}")
         except DatabaseError as e:
             print(f"Database error while saving transactions: {e}")
@@ -62,6 +63,9 @@ def send_to_consumer(self):
     channel_layer = get_channel_layer()
 
     while True:
+        
+        cache.set("watcher_is_running", "true", timeout=5)
+        
         try:
             res = r.brpop(REDIS_TRANSACTIONS_CHANNELS_KEY, timeout=5)
 

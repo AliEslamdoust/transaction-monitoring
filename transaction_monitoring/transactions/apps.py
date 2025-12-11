@@ -11,8 +11,12 @@ class TransactionsConfig(AppConfig):
         if any(x in sys.argv for x in ["collectstatic", "makemigrations", "migrate"]):
             return
 
-        lock_id = "startup_task"
-        if cache.add(lock_id, "true", timeout=60):
+        if cache.get("watcher_is_running"):
+            print("Watcher is already active. Skipping startup..")
+            return
+
+        lock_id = "startup_watcher"
+        if cache.add(lock_id, "true", timeout=10):
             from .tasks import send_to_consumer
 
             send_to_consumer.delay()
