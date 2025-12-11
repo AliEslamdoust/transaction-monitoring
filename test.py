@@ -34,77 +34,47 @@ def send_request(post_url, payload, request_id):
         return {"id": request_id, "status": "failed", "error": str(e)}
 
 
-send_request_flag = threading.Event()
-send_request_flag.set()
-
-
-def test_api_speed(dps=10):
-    timer_thread = threading.Timer(1, send_request_flag.clear)
-    timer_thread.start()
-
-    # req = ""
-    results = []
+def test_api_speed(dps=50):
     future_to_req = []
     post_url = f"{url}add-transaction/"
 
     start_time = time.time()
-    # i = 0
-    # while send_request_flag.is_set() and i < dps:
-    #     i += 1
-    print(f"Started sending {dps} requests ...")
+    is_one_second = True
+    while is_one_second:
+        results = []
+        print(f"Started sending {dps} requests ...")
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=50) as executer:
-        for i in range(dps):
-            current_time = datetime.now(ZoneInfo("UTC"))
-            payload = {
-                "transaction_id": random_id(),
-                "status": "PENDING",
-                "user": 1,
-                "amount": random_amount(),
-                "created_at": str(current_time),
-            }
-            future = executer.submit(send_request, post_url, payload, i)
-            future_to_req.append(future)
-
-    for future in concurrent.futures.as_completed(future_to_req):
-        result = future.result()
-        results.append(result)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=50) as executer:
+            for i in range(dps):
+                current_time = datetime.now(ZoneInfo("UTC"))
+                payload = {
+                    "transaction_id": random_id(),
+                    "status": "PENDING",
+                    "user": 1,
+                    "amount": random_amount(),
+                    "created_at": str(current_time),
+                }
+                future = executer.submit(send_request, post_url, payload, i)
+                future_to_req.append(future)
+                
+        is_one_second = time.time() - start_time < 1
         
-        if result["status"] == "failed":
-            result_id = result["id"]
-            result_err = result["error"]
-            print(f"Request {result_id} failed: {result_err}")
-            
-    duration = time.time() - start_time
-    print(f"Finished in {duration:.2f} seconds")
-    
-    success_counts = sum (1 for r in results if r["status"] == "success")
-    fail_counts = dps - success_counts
-    
-    print(f"Success: {success_counts}")
-    print(f"Failed: {fail_counts}")
+        for future in concurrent.futures.as_completed(future_to_req):
+            result = future.result()
+            results.append(result)
 
-    # num_of_tries = dps / 10
-    # avg_of_all_tries = (dps + 10) / 2
-    # total_requests = num_of_tries * avg_of_all_tries
-    # print(total_requests)
+            if result["status"] == "failed":
+                result_id = result["id"]
+                result_err = result["error"]
+                print(f"Request {result_id} failed: {result_err}")
 
-    # req.join()
-    # end_time = datetime.now(ZoneInfo("UTC"))
-    # diff = relativedelta(start_time, end_time)
+        duration = time.time() - start_time
+        print(f"Finished in {duration:.2f} seconds")
 
-    # if diff.seconds < 1:
-    #     timer_thread.cancel()
-    #     print(dps, diff, end_time, start_time)
-    #     thread = threading.Thread(target=test_api_speed, args=(dps + 10,))
-    #     thread.start()
-    # elif not i == dps:
-    #     thread = threading.Thread(target=test_api_speed, args=(dps - 1,))
-    #     thread.start()
-    # else:
-    #     print(f"this api can handle maximum of {dps} requests per second")
+        success_counts = sum (1 for r in results if r["status"] == "success")
+        fail_counts = len(results) - success_counts
 
-    # print(f"{dps} data were sent successfully to requested api.")
+        print(f"Success: {success_counts} / {len(results)}")
+        print(f"Failed: {fail_counts} / {len(results)}")
 
-
-test_api_speed(1000)
+test_api_speed()
