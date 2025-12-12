@@ -7,6 +7,6 @@ urlpatterns = [
         "delete-transactions/",
         views.DeleteTransactionsView.as_view(),
     ),
-    path("get-transactions", views.GetTransactionsAverageView.as_view()),
-    path("get-transaction/<int:pk>", views.gettransaction.as_view()),
+    path("transactions/", views.GetTransactionsAverageView.as_view()),
+    path("transactions/<int:pk>", views.gettransaction.as_view()),
 ]

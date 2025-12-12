@@ -65,24 +65,25 @@ Before running this application, ensure you have the following installed:
    # sudo -u postgres psql # On Linux/Mac
    ```
 
-   Create a new database and user:
+   Run these SQL commands:
    ```sql
    CREATE DATABASE transactions_database;
    CREATE USER admin WITH PASSWORD '12345678';
    GRANT ALL PRIVILEGES ON DATABASE transactions_database TO admin;
+   ALTER USER admin CREATEDB;
    ```
 
-   Switch the database context using the \c meta-command:
+   Switch to the database:
    ```sql
    \c transactions_database
    ```
 
-   Grant CREATE permission to user:
+   Grant schema permissions:
    ```sql
    GRANT CREATE ON SCHEMA public TO admin;
    ```
 
-   EXit the terminal:
+   Exit:
    ```sql
    \q
    ```
@@ -132,7 +133,7 @@ celery -A transaction_monitoring worker -l info
 
 ### 3. Celery Beat
 
-Start the Celery Beat scheduler for periodic tasks (flushes transactions from Redis to PostgreSQL every 5 seconds):
+Start the Celery Beat scheduler for periodic tasks (flushes transactions from Redis to PostgreSQL every 60 seconds):
 ```bash
 cd transaction_monitoring
 celery -A transaction_monitoring beat -l info
@@ -150,7 +151,8 @@ celery -A transaction_monitoring beat -l info
     "transaction_id": "TRX123456",
     "user": 1,
     "amount": 1000,
-    "status": "PENDING"
+    "status": "PENDING",
+    "created_at": "2025-12-12T10:30:00Z"
   }
   ```
 - **Response**: `200 OK`
@@ -159,24 +161,54 @@ celery -A transaction_monitoring beat -l info
     "message": "Transaction detail was obtained successfully."
   }
   ```
+- **Note**: The transaction is stored in Redis and will be bulk-inserted to PostgreSQL by the Celery Beat task
 
 ### Get Transaction
 - **URL**: `/api/transactions/<id>/`
 - **Method**: `GET`
-- **Description**: Retrieves a specific transaction by ID
+- **Description**: Retrieves a specific transaction by ID from the PostgreSQL database
+- **Response**: `200 OK`
+  ```json
+  {
+    "id": 1,
+    "transaction_id": "TRX123456",
+    "user": 1,
+    "amount": 1000,
+    "status": "PENDING",
+    "created_at": "2025-12-12T10:30:00Z"
+  }
+  ```
 
-### Get Transaction Averages
-- **URL**: `/api/transactions/average/?from=YYYY-MM-DD&to=YYYY-MM-DD`
+### Get Transaction Statistics
+- **URL**: `/api/get-transactions?from=YYYY-MM-DD&to=YYYY-MM-DD`
 - **Method**: `GET`
-- **Description**: Calculates average transaction amounts grouped by day within a date range
+- **Description**: Retrieves transaction statistics within a date range, including average amount, total profit, and number of sales
 - **Query Parameters**:
-  - `from`: Start date (optional, defaults to earliest transaction date)
-  - `to`: End date (optional, defaults to latest transaction date)
+  - `from`: Start date (optional, format: YYYY-MM-DD)
+  - `to`: End date (optional, format: YYYY-MM-DD)
+- **Response**: `200 OK`
+  ```json
+  {
+    "data": {
+      "avgerage_of_transactions": 1250.50,
+      "whole_profit": 50020,
+      "numer_of_sales": 40,
+      "selected_time_frame": "10 days"
+    }
+  }
+  ```
 
-### Delete All Transactions (Testing)
+### Delete All Transactions (Testing Only)
 - **URL**: `/api/delete-transactions/`
 - **Method**: `DELETE`
-- **Description**: Deletes all transactions (for testing purposes only)
+- **Description**: Deletes all transactions from the database (for testing purposes only)
+- **Response**: `200 OK`
+  ```json
+  {
+    "message": "Deleted all rows from transactions_transaction table"
+  }
+  ```
+- **Warning**: This endpoint should be removed or secured in production environments
 
 ## WebSocket Connection
 
@@ -198,11 +230,13 @@ celery -A transaction_monitoring beat -l info
 ### Transaction Flow
 
 1. **Transaction Creation**: Client sends POST request to `/api/add-transaction/`
-2. **Redis Queue**: Transaction data is pushed to Redis list (`transactions_list`)
-3. **WebSocket Broadcast**: Real-time update sent to all connected admin clients
-4. **Periodic Flush**: Celery Beat triggers `flush_transactions` task every 5 seconds
+2. **Redis Queue**: Transaction data is pushed to two Redis lists:
+   - `transactions_list_ch`: For WebSocket broadcasting
+   - `transactions_list_db`: For database persistence
+3. **WebSocket Broadcast**: Real-time update sent to all connected admin clients via Channels
+4. **Periodic Flush**: Celery Beat triggers `flush_transactions` task every 60 seconds
 5. **Bulk Insert**: Transactions are bulk-inserted from Redis to PostgreSQL
-6. **Queue Cleanup**: Successfully inserted transactions are removed from Redis
+6. **Queue Cleanup**: Successfully inserted transactions are removed from Redis queue
 
 ### Transaction Model
 
@@ -210,9 +244,9 @@ celery -A transaction_monitoring beat -l info
 class Transaction(models.Model):
     transaction_id = models.CharField(max_length=100, unique=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    status = models.CharField(max_length=20, choices=PAYMENT_STATUS)
-    created_at = models.DateTimeField(auto_now_add=True)
-    amount = models.IntegerField(validators=[MinValueValidator(0)])
+    status = models.CharField(max_length=20, choices=PAYMENT_STATUS, default="PENDING")
+    created_at = models.DateTimeField()
+    amount = models.IntegerField(validators=[MinValueValidator(0)], default=0)
 ```
 
 **Payment Statuses**:

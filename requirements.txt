@@ -1,26 +1,11 @@
-# Django Framework
 Django==5.2.8
-
-# Django REST Framework
 djangorestframework==3.15.2
-
-# PostgreSQL Database Adapter
 psycopg2-binary==2.9.10
-
-# Redis Support
 redis==5.2.1
 django-redis==5.4.0
-
-# Django Channels for WebSockets
+celery==5.4.0
 channels==4.2.0
 channels-redis==4.2.1
 daphne==4.1.2
-
-# Celery for Background Tasks
-celery==5.4.0
-
-# Static Files Support
 whitenoise==6.8.2
-
-# ASGI Support
-asgiref==3.8.1
+requests==2.32.5
