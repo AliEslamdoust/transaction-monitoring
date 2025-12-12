@@ -358,11 +358,7 @@ transaction_monitoring/
 
 ## License
 
-This project is for educational and development purposes.
-
-## Contributing
-
-This is a personal project. For questions or suggestions, please contact the repository owner.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
