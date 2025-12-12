@@ -333,27 +333,39 @@ celery -A transaction_monitoring inspect registered
 ## Project Structure
 
 ```
-transaction_monitoring/
-├── manage.py
-├── transaction_monitoring/
-│   ├── __init__.py
-│   ├── asgi.py              # ASGI configuration
-│   ├── celery.py            # Celery configuration
-│   ├── consumers.py         # WebSocket consumers
-│   ├── routing.py           # WebSocket URL routing
-│   ├── settings.py          # Django settings
-│   ├── urls.py              # Main URL configuration
-│   └── wsgi.py              # WSGI configuration
-└── transactions/
-    ├── __init__.py
-    ├── admin.py             # Django admin configuration
-    ├── apps.py              # App configuration
-    ├── models.py            # Transaction model
-    ├── serializers.py       # DRF serializers
-    ├── tasks.py             # Celery tasks
-    ├── tests.py             # Test suite
-    ├── urls.py              # App URL configuration
-    └── views.py             # API views
+project/
+├── LICENSE                  # MIT License
+├── README.md                # Project documentation
+├── requirements.txt         # Python dependencies
+├── test.py                  # Testing utilities
+└── transaction_monitoring/
+    ├── manage.py            # Django management script
+    ├── celerybeat-schedule  # Celery Beat schedule database
+    ├── staticfiles/         # Collected static files
+    ├── transaction_monitoring/
+    │   ├── __init__.py
+    │   ├── asgi.py          # ASGI configuration for Channels
+    │   ├── celery.py        # Celery configuration
+    │   ├── consumers.py     # WebSocket consumers
+    │   ├── routing.py       # WebSocket URL routing
+    │   ├── settings.py      # Django settings
+    │   ├── urls.py          # Main URL configuration
+    │   └── wsgi.py          # WSGI configuration
+    └── transactions/
+        ├── __init__.py
+        ├── admin.py         # Django admin configuration
+        ├── apps.py          # App configuration
+        ├── helper.py        # Helper functions
+        ├── models.py        # Transaction model
+        ├── serializers.py   # DRF serializers
+        ├── tasks.py         # Celery tasks
+        ├── tests.py         # Test suite
+        ├── urls.py          # App URL configuration
+        ├── views.py         # API views
+        ├── migrations/      # Database migrations
+        └── services/
+            ├── receiver.py  # Service layer for receiving transactions
+            └── tasks.py     # Service layer tasks
 ```
 
 ## License
