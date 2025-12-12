@@ -38,7 +38,7 @@ class HighLoadTransactionTest(TransactionTestCase):
         print(f"Request {i}: {resp.status_code}")
         self.assertEqual(resp.status_code, 200)
 
-    def test_50_requests(self):
+    def test_400_requests(self):
         url = "/api/add-transaction/"
-        for i in range(50):
+        for i in range(400):
             self.send_request(url, i)

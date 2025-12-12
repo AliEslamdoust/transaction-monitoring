@@ -7,6 +7,7 @@ from .models import Transaction
 
 
 def validate_datetime(from_date_str, to_date_str):
+    """validates and parses date strings"""
     from_datetime = parse_datetime(from_date_str)
     to_datetime = parse_datetime(to_date_str)
 
@@ -29,6 +30,7 @@ def validate_datetime(from_date_str, to_date_str):
 
 
 def get_time_frame(to_datetime, from_datetime):
+    """calculates time difference between dates"""
     earliest, latest = get_date()
 
     if from_datetime < earliest:
@@ -57,6 +59,7 @@ def get_time_frame(to_datetime, from_datetime):
 
 
 def get_date():
+    """gets earliest and latest transaction dates"""
     dates = Transaction.objects.aggregate(
         earliest=Min("created_at"), latest=Max("created_at")
     )

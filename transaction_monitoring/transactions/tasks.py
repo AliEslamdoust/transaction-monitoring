@@ -15,11 +15,14 @@ REDIS_TRANSACTIONS_CHANNELS_KEY = settings.REDIS_TRANSACTIONS_CHANNELS_KEY
 
 
 class TransactionManager:
+    """handles bulk transaction saving"""
+
     def save_data(self, objects):
+        """saves transactions to database"""
         try:
             Transaction.objects.bulk_create(objects, ignore_conflicts=True)
             return {"success": True}
-        
+
         except IntegrityError as e:
             print(f"Integrity error while saving transactions: {e}")
         except DatabaseError as e:
@@ -31,6 +34,7 @@ class TransactionManager:
 
 @shared_task
 def flush_transactions():
+    """moves transactions from redis to database"""
     r = get_redis_connection("default")
     manager = TransactionManager()
 
@@ -59,13 +63,14 @@ def flush_transactions():
 
 @shared_task(bind=True, time_limit=None, soft_time_limit=None)
 def send_to_consumer(self):
+    """sends transactions to websocket consumers"""
     r = get_redis_connection("default")
     channel_layer = get_channel_layer()
 
     while True:
-        
+
         cache.set("watcher_is_running", "true", timeout=5)
-        
+
         try:
             res = r.brpop(REDIS_TRANSACTIONS_CHANNELS_KEY, timeout=5)
 
@@ -94,6 +99,7 @@ def send_to_consumer(self):
 
 
 def delete_transactions_for_test():
+    """deletes all transactions for testing"""
     with connection.cursor() as cursor:
         cursor.execute("DELETE FROM transactions_transaction;")
         cursor.execute(

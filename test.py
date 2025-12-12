@@ -23,36 +23,44 @@ class Colors:
 
 
 def print_header(text):
+    """prints centered header with colors"""
     print(f"\n{Colors.BOLD}{Colors.CYAN}{'='*60}{Colors.ENDC}")
     print(f"{Colors.BOLD}{Colors.CYAN}{text.center(60)}{Colors.ENDC}")
     print(f"{Colors.BOLD}{Colors.CYAN}{'='*60}{Colors.ENDC}\n")
 
 
 def print_success(text):
+    """prints green success message"""
     print(f"{Colors.GREEN}✓ {text}{Colors.ENDC}")
 
 
 def print_error(text):
+    """prints red error message"""
     print(f"{Colors.RED}✗ {text}{Colors.ENDC}")
 
 
 def print_info(text):
+    """prints blue info message"""
     print(f"{Colors.BLUE}ℹ {text}{Colors.ENDC}")
 
 
 def print_warning(text):
+    """prints yellow warning message"""
     print(f"{Colors.YELLOW}⚠ {text}{Colors.ENDC}")
 
 
 def print_menu_option(number, text):
+    """prints menu option with number"""
     print(f"{Colors.BOLD}{Colors.YELLOW}[{number}]{Colors.ENDC} {text}")
 
 
 def random_id():
+    """generates random transaction id"""
     return "".join(random.choices(string.digits, k=16))
 
 
 def random_amount():
+    """generates random amount"""
     return "".join(random.choices(string.digits, k=3))
 
 
@@ -60,6 +68,7 @@ url = "http://127.0.0.1:8000/api/"
 
 
 def send_request(post_url, payload, request_id):
+    """sends single transaction request"""
     try:
         response = requests.post(post_url, json=payload)
         response.raise_for_status()
@@ -69,6 +78,7 @@ def send_request(post_url, payload, request_id):
 
 
 def test_api_speed(dps):
+    """tests api speed with concurrent requests"""
     print_header("API SPEED TEST")
     future_to_req = []
     post_url = f"{url}add-transaction/"
@@ -110,7 +120,6 @@ def test_api_speed(dps):
     success_counts = sum(1 for r in results if r["status"] == "success")
     fail_counts = len(results) - success_counts
 
-    # Print results
     print(f"\n{Colors.BOLD}{'─'*60}{Colors.ENDC}")
     print_success(f"Duration: {Colors.BOLD}{duration:.2f}s{Colors.ENDC}{Colors.GREEN}")
     print_success(
@@ -122,7 +131,7 @@ def test_api_speed(dps):
             f"Failed: {Colors.BOLD}{fail_counts}{Colors.ENDC}{Colors.RED} / {len(results)}"
         )
         print(f"\n{Colors.RED}Failed Requests:{Colors.ENDC}")
-        for req in failed_requests[:5]:  # Show first 5 failures
+        for req in failed_requests[:5]:
             print_error(f"  Request {req['id']}: {req['error']}")
         if len(failed_requests) > 5:
             print_error(f"  ... and {len(failed_requests) - 5} more")
@@ -152,6 +161,7 @@ def test_api_speed(dps):
 
 
 def main():
+    """main menu for test cli"""
     print_header("TRANSACTION MONITORING - TEST CLI")
     print_menu_option("1", "Test API Speed")
     print_menu_option("2", "Get Transaction Statistics")
@@ -181,6 +191,7 @@ def main():
 
 
 def test_get_transaction_statistics():
+    """gets and displays transaction statistics"""
     print_header("TRANSACTION STATISTICS")
 
     print_info("Date format: YYYY-MM-DD HH:MM:SS")
@@ -244,6 +255,7 @@ def test_get_transaction_statistics():
 
 
 def validate_datetime(from_date_str, to_date_str):
+    """converts date strings to iso format"""
     try:
         if from_date_str:
             from_datetime = datetime.strptime(from_date_str, "%Y-%m-%d %H:%M:%S")

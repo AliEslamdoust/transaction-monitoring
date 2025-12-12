@@ -14,10 +14,13 @@ REDIS_TRANSACTIONS_DATABASE_KEY = settings.REDIS_TRANSACTIONS_DATABASE_KEY
 
 
 class ObtainTransactionDetailsView(generics.CreateAPIView):
+    """handles creating new transactions"""
+
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
 
     def create(self, request, *args, **kwargs):
+        """saves transaction data to redis"""
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
@@ -36,7 +39,10 @@ class ObtainTransactionDetailsView(generics.CreateAPIView):
 
 
 class DeleteTransactionsView(APIView):
+    """deletes all transactions from database"""
+
     def delete(Self, request, *args, **kwargs):
+        """removes all transaction records"""
         delete_transactions_for_test()
         return Response(
             {"message": "Deleted all rows from transactions_transaction table"},
@@ -45,7 +51,10 @@ class DeleteTransactionsView(APIView):
 
 
 class GetTransactionsAverageView(APIView):
+    """calculates transaction statistics"""
+
     def get(self, request):
+        """gets average and total for transactions"""
         from_date_str = request.GET.get("from")
         to_date_str = request.GET.get("to")
 
@@ -83,5 +92,7 @@ class GetTransactionsAverageView(APIView):
 
 
 class gettransaction(generics.RetrieveAPIView):
+    """retrieves single transaction by id"""
+
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
