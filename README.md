@@ -18,10 +18,12 @@ A real-time transaction monitoring system built with Django, Django REST Framewo
 - **API Framework**: Django REST Framework 3.15.2
 - **Database**: PostgreSQL (psycopg2-binary 2.9.10)
 - **Cache & Message Broker**: Redis 5.2.1
+- **Django Redis**: django-redis 5.4.0
 - **Async Processing**: Celery 5.4.0
 - **WebSockets**: Django Channels 4.2.0 with channels-redis 4.2.1
 - **ASGI Server**: Daphne 4.1.2
 - **Static Files**: WhiteNoise 6.8.2
+- **HTTP Client**: requests 2.32.5
 
 ## Prerequisites
 
@@ -265,14 +267,30 @@ Key settings are located in `transaction_monitoring/settings.py`:
 
 ## Testing
 
-The project includes high-load transaction tests. To run tests:
+### Interactive CLI Test Menu (Recommended)
+
+The easiest way to test the application is using the interactive CLI menu:
+
+```bash
+python test.py
+```
+
+This provides a user-friendly interface with the following options:
+- **API Speed Test**: Simulate high-volume transaction submissions with configurable data per second
+- **Get Transaction Statistics**: Retrieve and display transaction analytics with customizable date ranges
+- Color-coded output for easy reading
+- Real-time progress indicators
+
+### Django Unit Tests
+
+For automated testing, run the Django test suite:
 
 ```bash
 cd transaction_monitoring
 python manage.py test
 ```
 
-### High Load Test
+#### High Load Test
 
 The test suite includes `HighLoadTransactionTest` which:
 - Creates 50 distinct users
