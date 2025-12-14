@@ -23,7 +23,7 @@ class Colors:
 
 
 def print_header(text):
-    """prints centered header with colors"""
+    """prints centered header with colors""" 
     print(f"\n{Colors.BOLD}{Colors.CYAN}{'='*60}{Colors.ENDC}")
     print(f"{Colors.BOLD}{Colors.CYAN}{text.center(60)}{Colors.ENDC}")
     print(f"{Colors.BOLD}{Colors.CYAN}{'='*60}{Colors.ENDC}\n")
@@ -68,7 +68,16 @@ url = "http://127.0.0.1:8000/api/"
 
 
 def send_request(post_url, payload, request_id):
-    """sends single transaction request"""
+    """sends single transaction request
+
+    Args:
+        post_url (str): The URL to send the request to.
+        payload (dict): The payload to send with the request.
+        request_id (int): The ID of the request.
+
+    Returns:
+        dict: A dictionary containing the result of the request."
+    """
     try:
         response = requests.post(post_url, json=payload)
         response.raise_for_status()
@@ -78,7 +87,14 @@ def send_request(post_url, payload, request_id):
 
 
 def test_api_speed(dps):
-    """tests api speed with concurrent requests"""
+    """tests api speed with concurrent requests
+
+    Args:
+        dps (int): The number of requests per second.
+
+    Returns:
+        None
+    """
     print_header("API SPEED TEST")
     future_to_req = []
     post_url = f"{url}add-transaction/"
@@ -171,7 +187,9 @@ def main():
 
     if option == "1":
         try:
-            dps = int(input(f"{Colors.CYAN}Enter data per second: {Colors.ENDC}"))
+            dps = int(input(f"{Colors.CYAN}Enter data per second, 0 to return to main menu: {Colors.ENDC}"))
+            if dps == 0:
+                main()
             test_api_speed(dps)
         except ValueError:
             print_error("Invalid input. Please enter a number.")
@@ -183,7 +201,7 @@ def main():
             print_error(f"Unexpected error: {e}")
             main()
     elif option == "0":
-        print_success("Goodbye! 👋")
+        print_success("Goodbye!")
         exit()
     else:
         print_error("Invalid option. Please try again.")
@@ -205,7 +223,7 @@ def test_get_transaction_statistics():
         return
 
     from_datetime, to_datetime = validate_datetime(from_datetime, to_datetime)
-    get_url = f"{url}transactions/"
+    get_url = f"{url}transactions"
 
     print_info("Fetching statistics...")
 
@@ -217,7 +235,7 @@ def test_get_transaction_statistics():
         data = response.json()
 
         print(f"\n{Colors.BOLD}{'─'*60}{Colors.ENDC}")
-        print(f"{Colors.BOLD}{Colors.GREEN}📊 TRANSACTION STATISTICS{Colors.ENDC}\n")
+        print(f"{Colors.BOLD}{Colors.GREEN}TRANSACTION STATISTICS{Colors.ENDC}\n")
 
         if "data" in data:
             stats = data["data"]
@@ -255,21 +273,27 @@ def test_get_transaction_statistics():
 
 
 def validate_datetime(from_date_str, to_date_str):
-    """converts date strings to iso format"""
+    """converts date strings to iso format
+
+    Args:
+        from_date_str (str): The start date string in format YYYY-MM-DD HH:MM:SS.
+        to_date_str (str): The end date string in format YYYY-MM-DD HH:MM:SS.
+
+    Returns:
+        tuple: A tuple containing the start and end datetime objects.
+    """
     try:
         if from_date_str:
             from_datetime = datetime.strptime(from_date_str, "%Y-%m-%d %H:%M:%S")
-            from_datetime_iso = from_datetime.strftime("%Y-%m-%dT%H:%M:%SZ")
         else:
-            from_datetime_iso = ""
+            from_datetime = ""
 
         if to_date_str:
             to_datetime = datetime.strptime(to_date_str, "%Y-%m-%d %H:%M:%S")
-            to_datetime_iso = to_datetime.strftime("%Y-%m-%dT%H:%M:%SZ")
         else:
-            to_datetime_iso = ""
+            to_datetime = ""
 
-        return from_datetime_iso, to_datetime_iso
+        return from_datetime, to_datetime
     except ValueError:
         print_error("Invalid date format. Please use: YYYY-MM-DD HH:MM:SS")
         return test_get_transaction_statistics()

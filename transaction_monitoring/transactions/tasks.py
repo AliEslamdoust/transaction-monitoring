@@ -18,7 +18,14 @@ class TransactionManager:
     """handles bulk transaction saving"""
 
     def save_data(self, objects):
-        """saves transactions to database"""
+        """saves transactions to database
+
+        Args:
+            objects (list): list of transaction objects
+
+        Returns:
+            dict: a dictionary containing the result of the operation
+        """
         try:
             Transaction.objects.bulk_create(objects, ignore_conflicts=True)
             return {"success": True}
@@ -99,7 +106,7 @@ def send_to_consumer(self):
 
 
 def delete_transactions_for_test():
-    """deletes all transactions for testing"""
+    """deletes all transactions for testing only"""
     with connection.cursor() as cursor:
         cursor.execute("DELETE FROM transactions_transaction;")
         cursor.execute(

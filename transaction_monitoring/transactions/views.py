@@ -14,7 +14,14 @@ REDIS_TRANSACTIONS_DATABASE_KEY = settings.REDIS_TRANSACTIONS_DATABASE_KEY
 
 
 class ObtainTransactionDetailsView(generics.CreateAPIView):
-    """handles creating new transactions"""
+    """handles creating new transactions
+
+    Args:
+        data (dict): Transaction model data
+
+    Returns:
+        Response: A response object containing a success message.
+    """
 
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer
@@ -39,7 +46,11 @@ class ObtainTransactionDetailsView(generics.CreateAPIView):
 
 
 class DeleteTransactionsView(APIView):
-    """deletes all transactions from database"""
+    """deletes all transactions from database
+
+    Returns:
+        Response: A response object containing a success message.
+    """
 
     def delete(Self, request, *args, **kwargs):
         """removes all transaction records"""
@@ -51,14 +62,23 @@ class DeleteTransactionsView(APIView):
 
 
 class GetTransactionsAverageView(APIView):
-    """calculates transaction statistics"""
+    """calculates transaction statistics
+
+    Args:
+        request (Request): The request object.
+
+    Returns:
+        Response: A response object containing the average and total for transactions.
+    """
 
     def get(self, request):
         """gets average and total for transactions"""
         from_date_str = request.GET.get("from")
         to_date_str = request.GET.get("to")
 
-        from_datetime, to_datetime = validate_datetime(from_date_str, to_date_str)
+        from_datetime = validate_datetime(from_date_str, True)
+        to_datetime = validate_datetime(to_date_str, False)
+        print(from_datetime, to_datetime)
 
         transactions = Transaction.objects.filter(
             created_at__gte=from_datetime, created_at__lte=to_datetime
@@ -92,7 +112,14 @@ class GetTransactionsAverageView(APIView):
 
 
 class gettransaction(generics.RetrieveAPIView):
-    """retrieves single transaction by id"""
+    """retrieves single transaction by id
+
+    Args:
+        generics (RetrieveAPIView): The RetrieveAPIView class.
+
+    Returns:
+        Response: A response object containing the transaction data.
+    """
 
     queryset = Transaction.objects.all()
     serializer_class = TransactionSerializer

@@ -5,32 +5,46 @@ from datetime import datetime
 from django.utils.dateparse import parse_datetime
 from .models import Transaction
 
+def validate_datetime(datetime_str, is_min):
+    """Validates and parses date strings.
 
-def validate_datetime(from_date_str, to_date_str):
-    """validates and parses date strings"""
-    from_datetime = parse_datetime(from_date_str)
-    to_datetime = parse_datetime(to_date_str)
+    Args:
+        datetime_str (str): The datetime string.
+        is_min (bool): Whether the datetime is the minimum value.
 
-    if not to_datetime:
-        to_datetime = timezone.make_aware(datetime.max)
+    Returns:
+        datetime: The validated datetime object.
+    """
+    parsed_datetime = parse_datetime(datetime_str)
 
-    if not from_datetime:
-        from_datetime = timezone.make_aware(datetime.min)
+    if not parsed_datetime:
+        return (
+            timezone.make_aware(datetime.min)
+            if is_min
+            else timezone.make_aware(datetime.max)
+        )
 
-    if timezone.is_naive(to_datetime):
-        timezone.make_aware(to_datetime)
+    if is_min:
+        if timezone.is_naive(parsed_datetime) or parsed_datetime < timezone.make_aware(datetime.min):
+            parsed_datetime = timezone.make_aware(parsed_datetime)
 
-    if timezone.is_naive(from_datetime):
-        timezone.make_aware(from_datetime)
+    else:
+        if timezone.is_naive(parsed_datetime) or parsed_datetime > timezone.make_aware(datetime.max):
+            parsed_datetime = timezone.make_aware(parsed_datetime)
 
-    if to_datetime < from_datetime:
-        to_datetime, from_datetime = from_datetime, to_datetime
-
-    return from_datetime, to_datetime
+    return parsed_datetime
 
 
 def get_time_frame(to_datetime, from_datetime):
-    """calculates time difference between dates"""
+    """calculates time difference between dates
+
+    Args:
+        to_datetime (datetime): The end datetime.
+        from_datetime (datetime): The start datetime.
+
+    Returns:
+        str: A string representing the time difference.
+    """
     earliest, latest = get_date()
 
     if from_datetime < earliest:
@@ -59,7 +73,11 @@ def get_time_frame(to_datetime, from_datetime):
 
 
 def get_date():
-    """gets earliest and latest transaction dates"""
+    """gets earliest and latest transaction dates
+
+    Returns:
+        tuple: A tuple containing the earliest and latest datetime objects.
+    """
     dates = Transaction.objects.aggregate(
         earliest=Min("created_at"), latest=Max("created_at")
     )
