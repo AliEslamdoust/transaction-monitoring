@@ -27,13 +27,83 @@ A real-time transaction monitoring system built with Django, Django REST Framewo
 
 ## Prerequisites
 
-Before running this application, ensure you have the following installed:
+### Option 1: Docker (Recommended)
+- Docker Engine 20.10 or higher
+- Docker Compose V2
 
+### Option 2: Local Installation
 - Python 3.10 or higher
 - PostgreSQL
 - Redis Server
 
 ## Installation
+
+### Option 1: Docker Setup (Recommended)
+
+1. **Clone the repository**
+   ```bash
+   cd /home/ali/tm
+   ```
+
+2. **Create environment file** (optional)
+   ```bash
+   cp .env.example .env
+   # Edit .env if you want to customize settings
+   ```
+
+3. **Build and start all services**
+   ```bash
+   docker-compose up --build -d
+   ```
+
+   This single command will:
+   - Build the Django application image
+   - Start PostgreSQL, Redis, Web server, Celery worker, and Celery beat
+   - Run database migrations automatically
+   - Collect static files
+
+4. **Verify all services are running**
+   ```bash
+   docker-compose ps
+   ```
+
+5. **View logs** (optional)
+   ```bash
+   docker-compose logs -f
+   ```
+
+6. **Create a superuser** (optional)
+   ```bash
+   docker-compose exec web python manage.py createsuperuser
+   ```
+
+The application will be available at `http://localhost:8000`
+
+**Useful Docker Commands:**
+```bash
+# Stop all services
+docker-compose down
+
+# Stop and remove volumes (clears database and Redis data)
+docker-compose down -v
+
+# View logs of a specific service
+docker-compose logs -f web
+docker-compose logs -f celery_worker
+
+# Restart a specific service
+docker-compose restart web
+
+# Execute commands in the web container
+docker-compose exec web python manage.py shell
+
+# Rebuild after code changes
+docker-compose up --build
+```
+
+---
+
+### Option 2: Local Installation
 
 1. **Clone the repository**
    ```bash
@@ -55,6 +125,8 @@ Before running this application, ensure you have the following installed:
 4. **Configure PostgreSQL Database**
    
    Create a PostgreSQL database with the following credentials (or update `settings.py`):
+
+
    - Database Name: `transactions_database`
    - User: `admin`
    - Password: `12345678`
