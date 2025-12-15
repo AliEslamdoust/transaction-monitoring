@@ -5,6 +5,7 @@ from datetime import datetime
 from django.utils.dateparse import parse_datetime
 from .models import Transaction
 
+
 def validate_datetime(datetime_str, is_min):
     """Validates and parses date strings.
 
@@ -25,11 +26,15 @@ def validate_datetime(datetime_str, is_min):
         )
 
     if is_min:
-        if timezone.is_naive(parsed_datetime) or parsed_datetime < timezone.make_aware(datetime.min):
+        if timezone.is_naive(parsed_datetime) or parsed_datetime < timezone.make_aware(
+            datetime.min
+        ):
             parsed_datetime = timezone.make_aware(parsed_datetime)
 
     else:
-        if timezone.is_naive(parsed_datetime) or parsed_datetime > timezone.make_aware(datetime.max):
+        if timezone.is_naive(parsed_datetime) or parsed_datetime > timezone.make_aware(
+            datetime.max
+        ):
             parsed_datetime = timezone.make_aware(parsed_datetime)
 
     return parsed_datetime
@@ -86,7 +91,7 @@ def get_date():
     latest = dates.get("latest")
 
     if earliest is None:
-        now = datetime.now(timezone.utc)
+        now = timezone.now()
         return now, now
 
     return earliest, latest
