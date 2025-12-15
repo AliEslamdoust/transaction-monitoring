@@ -6,7 +6,7 @@ from django.utils.dateparse import parse_datetime
 from .models import Transaction
 
 
-def validate_datetime(datetime_str, is_min):
+def validate_datetime(datetime_str = "", is_min = False):
     """Validates and parses date strings.
 
     Args:
