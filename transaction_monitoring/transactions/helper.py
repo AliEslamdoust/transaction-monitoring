@@ -82,4 +82,11 @@ def get_date():
         earliest=Min("created_at"), latest=Max("created_at")
     )
 
-    return dates["earliest"], dates["latest"]
+    earliest = dates.get("earliest")
+    latest = dates.get("latest")
+
+    if earliest is None:
+        now = datetime.now()
+        return now, now
+
+    return earliest, latest
