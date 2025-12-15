@@ -9,3 +9,4 @@ channels-redis==4.2.1
 daphne==4.1.2
 whitenoise==6.8.2
 requests==2.32.5
+python-dateutil==2.9.0.post0
