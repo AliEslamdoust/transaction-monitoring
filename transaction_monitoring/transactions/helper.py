@@ -86,7 +86,7 @@ def get_date():
     latest = dates.get("latest")
 
     if earliest is None:
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         return now, now
 
     return earliest, latest
