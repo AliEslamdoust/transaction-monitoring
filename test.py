@@ -64,7 +64,7 @@ def random_amount():
     return "".join(random.choices(string.digits, k=3))
 
 
-url = "http://127.0.0.1:8000/api/"
+url = "http://localhost:8000/api/"
 
 
 def send_request(post_url, payload, request_id):
