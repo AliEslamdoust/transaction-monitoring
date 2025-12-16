@@ -45,6 +45,8 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
       ALLOWED_HOSTS: localhost,127.0.0.1,0.0.0.0
+    volumes:
+      - .:/app
     ports:
       - "8000:8000"
     depends_on:
@@ -68,6 +70,8 @@ services:
       REDIS_PORT: 6379
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
+    volumes:
+      - .:/app
     depends_on:
       db:
         condition: service_healthy
@@ -89,6 +93,8 @@ services:
       REDIS_PORT: 6379
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
+    volumes:
+      - .:/app
     depends_on:
       db:
         condition: service_healthy

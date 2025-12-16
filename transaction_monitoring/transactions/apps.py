@@ -6,7 +6,8 @@ import sys
 class TransactionsConfig(AppConfig):
     """
     This configures the Transactions app, including its ready method for startup tasks.
-    """ 
+    """
+
     default_auto_field = "django.db.models.BigAutoField"
     name = "transactions"
 
@@ -15,19 +16,8 @@ class TransactionsConfig(AppConfig):
         This method is called when the app is ready, and it starts the watcher if it's not already running.
         """
 
-        from django.contrib.auth import get_user_model
+        from . import signals
 
-        User = get_user_model()
-        username = "testuser"
-        password = "testpassword"
-
-        # Only create if user doesn't exist
-        if not User.objects.filter(username=username).exists():
-            User.objects.create_superuser(
-                username=username, password=password
-            )
-            print(f"Created startup user '{username}'")
-            
         if any(x in sys.argv for x in ["collectstatic", "makemigrations", "migrate"]):
             return
 
