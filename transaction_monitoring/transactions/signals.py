@@ -15,6 +15,11 @@ def create_test_user(sender, **kwargs):
         username = "testuser"
         password = "testpassword"
 
-        if not User.objects.filter(username=username).exists():
-            User.objects.create_superuser(username=username, password=password)
-            print(f"Created startup user '{username}'")
+        from django.db import connection
+
+        if "auth_user" in connection.introspection.table_names():
+            if not User.objects.filter(username=username).exists():
+                User.objects.create_superuser(username=username, password=password)
+                print(f"Created startup user '{username}'")
+        else:
+            print("Skipping user creation: auth_user table not found")

@@ -15,7 +15,7 @@ class TransactionsConfig(AppConfig):
         """
         This method is called when the app is ready, and it starts the watcher if it's not already running.
         """
-        
+
         from . import signals
 
         if any(x in sys.argv for x in ["collectstatic", "makemigrations", "migrate"]):
