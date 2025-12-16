@@ -68,8 +68,6 @@ services:
       REDIS_PORT: 6379
       CELERY_BROKER_URL: redis://redis:6379/0
       CELERY_RESULT_BACKEND: redis://redis:6379/0
-    volumes:
-      - .:/app
     depends_on:
       db:
         condition: service_healthy
@@ -106,4 +104,5 @@ volumes:
 networks:
   tm_network:
     driver: bridge
+
 
