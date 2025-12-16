@@ -18,14 +18,13 @@ class TransactionsConfig(AppConfig):
         from django.contrib.auth import get_user_model
 
         User = get_user_model()
-        username = "myuser"
-        password = "mypassword"
-        email = "myuser@example.com"
+        username = "testuser"
+        password = "testpassword"
 
         # Only create if user doesn't exist
         if not User.objects.filter(username=username).exists():
             User.objects.create_superuser(
-                username=username, email=email, password=password
+                username=username, password=password
             )
             print(f"Created startup user '{username}'")
             
