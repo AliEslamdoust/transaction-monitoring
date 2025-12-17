@@ -1,6 +1,6 @@
 services:
   db:
-    image: postgres:16-alpine
+    image: postgres:latest
     restart: always
     volumes:
       - postgres_data:/var/lib/postgresql/
@@ -19,7 +19,7 @@ services:
       - tm_network
 
   redis:
-    image: redis:7-alpine
+    image: redis:latest
     restart: always
     volumes:
       - redis_data:/data
@@ -104,5 +104,6 @@ volumes:
 networks:
   tm_network:
     driver: bridge
+
 
 
