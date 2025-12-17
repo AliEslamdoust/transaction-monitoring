@@ -72,7 +72,13 @@ A real-time transaction monitoring system built with Django, Django REST Framewo
    docker-compose logs -f
    ```
 
-6. **Create a superuser** (optional)
+6. **Default Superuser**
+   
+   A default superuser is automatically created on startup:
+   - **Username**: `testuser`
+   - **Password**: `testpassword`
+
+   To create a custom superuser (optional):
    ```bash
    docker-compose exec web python manage.py createsuperuser
    ```
@@ -175,7 +181,13 @@ docker-compose up --build
    python manage.py migrate
    ```
 
-7. **Create a Superuser** (optional)
+7. **Default Superuser**
+
+   A default superuser is automatically created on startup:
+   - **Username**: `testuser`
+   - **Password**: `testpassword`
+
+   To create a custom superuser (optional):
    ```bash
    python manage.py createsuperuser
    ```
@@ -238,7 +250,7 @@ celery -A transaction_monitoring beat -l info
 - **Note**: The transaction is stored in Redis and will be bulk-inserted to PostgreSQL by the Celery Beat task
 
 ### Get Transaction
-- **URL**: `/api/transactions/<id>/`
+- **URL**: `/api/transactions/<id>`
 - **Method**: `GET`
 - **Description**: Retrieves a specific transaction by ID from the PostgreSQL database
 - **Response**: `200 OK`
@@ -254,12 +266,12 @@ celery -A transaction_monitoring beat -l info
   ```
 
 ### Get Transaction Statistics
-- **URL**: `/api/get-transactions?from=YYYY-MM-DD&to=YYYY-MM-DD`
+- **URL**: `/api/transactions?from=YYYY-MM-DD HH:MM:SS&to=YYYY-MM-DD HH:MM:SS`
 - **Method**: `GET`
 - **Description**: Retrieves transaction statistics within a date range, including average amount, total profit, and number of sales
 - **Query Parameters**:
-  - `from`: Start date (optional, format: YYYY-MM-DD)
-  - `to`: End date (optional, format: YYYY-MM-DD)
+  - `from`: Start date (optional, format: YYYY-MM-DD HH:MM:SS)
+  - `to`: End date (optional, format: YYYY-MM-DD HH:MM:SS)
 - **Response**: `200 OK`
   ```json
   {
